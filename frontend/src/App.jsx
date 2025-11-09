@@ -1,12 +1,10 @@
-// App.jsx — application routes
-import React from 'react'
-import { Routes, Route } from 'react-router-dom'
-import { QuizProvider } from './context/QuizContext'
-
-import Welcome from './components/Welcome'
-import Quiz from './quiz'
-import Results from './components/Results'
-import Compare from './components/Compare'
+import React from "react";
+import { Routes, Route } from "react-router-dom";
+import { QuizProvider } from "./context/QuizContext";
+import Welcome from "./components/Welcome";
+import Quiz from "./components/Quiz";
+import Results from "./components/Results";
+import Compare from "./components/Compare";
 
 export default function App() {
   return (
@@ -18,5 +16,5 @@ export default function App() {
         <Route path="/compare" element={<Compare />} />
       </Routes>
     </QuizProvider>
-  )
+  );
 }

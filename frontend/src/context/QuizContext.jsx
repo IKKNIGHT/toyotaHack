@@ -1,20 +1,27 @@
-// src/context/QuizContext.jsx
-import React, { createContext, useState, useContext } from 'react'
+import React, { createContext, useContext, useState } from "react";
 
-const QuizContext = createContext()
+const QuizContext = createContext();
 
-export const QuizProvider = ({ children }) => {
-  const [answers, setAnswers] = useState({})
-  const [selectedCars, setSelectedCars] = useState([])
-  const [favorites, setFavorites] = useState([])
+export function QuizProvider({ children }) {
+  const [answers, setAnswers] = useState({});
+  const [matchedCars, setMatchedCars] = useState([]);
+  const [likedCars, setLikedCars] = useState([]);
+  const [selectedForCompare, setSelectedForCompare] = useState([]);
 
-  return (
-    <QuizContext.Provider
-      value={{ answers, setAnswers, selectedCars, setSelectedCars, favorites, setFavorites }}
-    >
-      {children}
-    </QuizContext.Provider>
-  )
+  const value = {
+    answers,
+    setAnswers,
+    matchedCars,
+    setMatchedCars,
+    likedCars,
+    setLikedCars,
+    selectedForCompare,
+    setSelectedForCompare
+  };
+
+  return <QuizContext.Provider value={value}>{children}</QuizContext.Provider>;
 }
 
-export const useQuiz = () => useContext(QuizContext)
+export function useQuiz() {
+  return useContext(QuizContext);
+}
