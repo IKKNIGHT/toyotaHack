@@ -76,19 +76,24 @@ const FALLBACK_CARS = [
 app.get("/api/questions", async (req, res) => {
   try {
     const prompt = `
-You are Toyota's smart assistant. Generate 7 short lifestyle questions 
-to help a customer choose their ideal Toyota vehicle.
-Each should have 3–4 multiple-choice options.
-Respond ONLY in valid JSON array format like:
+You are Toyota's smart assistant. Generate exactly 7 lifestyle questions to help customers choose their ideal Toyota vehicle.
+Use these EXACT question IDs and formats:
+
 [
-  {"id":"use_case","question":"How will you mainly use your car?","options":["City driving","Family trips","Off-roading","Daily commute"]},
-  ...
+  {"id":"location","question":"Where do you call home?","options":["Urban Core","Suburban Life","Rural Freedom"]},
+  {"id":"commute","question":"What's your daily journey like?","options":["Under 10 miles","10-30 miles","30-50 miles","50+ miles"]},
+  {"id":"future_family","question":"Do you plan to have kids or grow family in next 5 years?","options":["Already have kids","Planning within 2 years","Maybe someday","No plans"]},
+  {"id":"adventure","question":"Are you a weekend road tripper / outdoor person?","options":["Not at all","Occasional trips","Monthly adventures","Every weekend!"]},
+  {"id":"relocation","question":"Are you likely to move or commute more in future?","options":["I stay put","Might relocate","Often move for work","Always moving"]},
+  {"id":"lifestyle","question":"Which describes your vibe?","options":["Practical","Tech-forward","Performance-centric","Family-first"]},
+  {"id":"priorities","question":"Top priority for your new car?","options":["Fuel efficiency","Space & comfort","Tech & safety","Performance & style"]}
 ]
-IMPORTANT: Return ONLY the JSON array, no other text.
-    `;
+
+Respond ONLY with this exact JSON array, no other text.
+`;
 
     const completion = await openai.chat.completions.create({
-      model: "google/gemini-flash-1.5", // BEST CHOICE - Excellent at JSON
+      model: "anthropic/claude-3-haiku", //ai model
       messages: [{ role: "system", content: prompt }],
       temperature: 0.7,
     });

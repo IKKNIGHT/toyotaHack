@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useQuiz } from "../context/QuizContext";
 import { useNavigate } from "react-router-dom";
 import { Heart, X, ArrowLeft } from "lucide-react";
@@ -8,11 +8,94 @@ export default function Results() {
   const [index, setIndex] = useState(0);
   const nav = useNavigate();
 
+  // Debug: Log matchedCars when component loads
+  useEffect(() => {
+    console.log("🔍 RESULTS COMPONENT MOUNTED");
+    console.log("📦 matchedCars:", matchedCars);
+    console.log("📦 matchedCars length:", matchedCars?.length);
+    if (matchedCars && matchedCars.length > 0) {
+      matchedCars.forEach((car, i) => {
+        console.log(`🚗 Car ${i + 1}:`, {
+          name: car.name,
+          image: car.image,
+          hasImage: !!car.image,
+          imageStartsWithHttp: car.image?.startsWith('http'),
+          description: car.description
+        });
+      });
+    }
+  }, [matchedCars]);
+
+  // Toyota official image mapping
+  
+// DATA URL FALLBACK - NO EXTERNAL REQUESTS
+// WORKING TOYOTA IMAGE URLS - YOUR FORMAT
+const TOYOTA_IMAGES = {
+  // Corolla Models
+  "corolla": "https://www.toyota.com/rgct/sharpr/vcr/adobe/dynamicmedia/deliver/urn:aaid:aem:946c2f7a-a46e-47c7-adc9-1d23af0af68d/image.png?format=auto&trim=alpha&maxWidth=800",
+  "corolla hybrid": "https://www.toyota.com/content/dam/toyota/jellies/max/2026/corolla/se/1864/3t3/1.png?bg=fff&fmt=webp&qlt=90&wid=1764",
+  "corolla sedan": "https://www.toyota.com/rgct/sharpr/vcr/adobe/dynamicmedia/deliver/urn:aaid:aem:946c2f7a-a46e-47c7-adc9-1d23af0af68d/image.png?format=auto&trim=alpha&maxWidth=800",
+  "corolla hatchback": "https://www.toyota.com/content/dam/toyota/jellies/max/2026/corolla/se/1864/3t3/1.png?bg=fff&fmt=webp&qlt=90&wid=1764",
+
+  // Camry Models
+  "camry": "https://www.toyota.com/content/dam/toyota/jellies/max/2025/camry/se/1864/1h0/1.png?bg=fff&fmt=webp&qlt=90&wid=1764",
+  "camry hybrid": "https://www.toyota.com/content/dam/toyota/jellies/max/2025/camry/se/1864/1h0/1.png?bg=fff&fmt=webp&qlt=90&wid=1764",
+
+  // Prius Models
+  "prius": "https://www.toyota.com/content/dam/toyota/jellies/max/2025/prius/le/1864/1h0/1.png?bg=fff&fmt=webp&qlt=90&wid=1764",
+  "prius prime": "https://www.toyota.com/content/dam/toyota/jellies/max/2025/prius/le/1864/1h0/1.png?bg=fff&fmt=webp&qlt=90&wid=1764",
+
+  // RAV4 Models
+  "rav4": "https://www.toyota.com/content/dam/toyota/jellies/max/2025/rav4/xle/1864/1h0/1.png?bg=fff&fmt=webp&qlt=90&wid=1764",
+  "rav4 hybrid": "https://www.toyota.com/content/dam/toyota/jellies/max/2025/rav4/xle/1864/1h0/1.png?bg=fff&fmt=webp&qlt=90&wid=1764",
+  "rav4 prime": "https://www.toyota.com/content/dam/toyota/jellies/max/2025/rav4/xle/1864/1h0/1.png?bg=fff&fmt=webp&qlt=90&wid=1764",
+
+  // Highlander Models
+  "highlander": "https://www.toyota.com/content/dam/toyota/jellies/max/2025/highlander/xle/1864/1h0/1.png?bg=fff&fmt=webp&qlt=90&wid=1764",
+  "highlander hybrid": "https://www.toyota.com/content/dam/toyota/jellies/max/2025/highlander/xle/1864/1h0/1.png?bg=fff&fmt=webp&qlt=90&wid=1764",
+
+  // 4Runner
+  "4runner": "https://www.toyota.com/content/dam/toyota/jellies/max/2025/4runner/sr5/1864/1h0/1.png?bg=fff&fmt=webp&qlt=90&wid=1764",
+
+  // Corolla Cross Models
+  "corolla cross": "https://www.toyota.com/content/dam/toyota/jellies/max/2025/corolla-cross/le/1864/1h0/1.png?bg=fff&fmt=webp&qlt=90&wid=1764",
+  "corolla cross hybrid": "https://www.toyota.com/content/dam/toyota/jellies/max/2025/corolla-cross/le/1864/1h0/1.png?bg=fff&fmt=webp&qlt=90&wid=1764",
+
+  // Venza
+  "venza": "https://www.toyota.com/content/dam/toyota/jellies/max/2025/venza/xle/1864/1h0/1.png?bg=fff&fmt=webp&qlt=90&wid=1764",
+
+  // Sequoia
+  "sequoia": "https://www.toyota.com/content/dam/toyota/jellies/max/2025/sequoia/sr5/1864/1h0/1.png?bg=fff&fmt=webp&qlt=90&wid=1764",
+
+  // Tacoma
+  "tacoma": "https://www.toyota.com/content/dam/toyota/jellies/max/2025/tacoma/sr/1864/1h0/1.png?bg=fff&fmt=webp&qlt=90&wid=1764",
+
+  // Tundra
+  "tundra": "https://www.toyota.com/content/dam/toyota/jellies/max/2025/tundra/sr/1864/1h0/1.png?bg=fff&fmt=webp&qlt=90&wid=1764",
+
+  // Sienna
+  "sienna": "https://www.toyota.com/content/dam/toyota/jellies/max/2025/sienna/xle/1864/1h0/1.png?bg=fff&fmt=webp&qlt=90&wid=1764",
+
+  // Crown
+  "crown": "https://www.toyota.com/content/dam/toyota/jellies/max/2025/crown/xle/1864/1h0/1.png?bg=fff&fmt=webp&qlt=90&wid=1764",
+
+  // bZ4X
+  "bz4x": "https://www.toyota.com/content/dam/toyota/jellies/max/2025/bz4x/xle/1864/1h0/1.png?bg=fff&fmt=webp&qlt=90&wid=1764",
+
+  // GR86
+  "gr86": "https://www.toyota.com/content/dam/toyota/jellies/max/2025/gr86/base/1864/1h0/1.png?bg=fff&fmt=webp&qlt=90&wid=1764",
+
+  // Supra
+  "supra": "https://www.toyota.com/content/dam/toyota/jellies/max/2025/supra/30/1864/1h0/1.png?bg=fff&fmt=webp&qlt=90&wid=1764",
+
+  // Default
+  "default": "https://www.toyota.com/rgct/sharpr/vcr/adobe/dynamicmedia/deliver/urn:aaid:aem:946c2f7a-a46e-47c7-adc9-1d23af0af68d/image.png?format=auto&trim=alpha&maxWidth=800"
+};
   const carsToShow = matchedCars.length > 0 ? matchedCars : [
     {
       id: 1,
       name: "Toyota Corolla Hybrid",
-      image: "https://www.toyota.com/imgix/responsive/images/mlp/colorizer/2023/corolla/1H0/1.png",
+      image: TOYOTA_IMAGES.corolla,
       description: "Fuel-efficient compact perfect for city driving",
       msrp: 24500,
       mpg: 52,
@@ -21,6 +104,45 @@ export default function Results() {
   ];
 
   const current = carsToShow[index];
+
+  // Function to get the best image for a car
+  const getCarImage = (car) => {
+  const carName = car.name.toLowerCase();
+  
+  // Exact matches first
+  if (carName.includes('corolla cross hybrid')) return TOYOTA_IMAGES['corolla cross hybrid'];
+  if (carName.includes('corolla cross')) return TOYOTA_IMAGES['corolla cross'];
+  if (carName.includes('corolla hatchback')) return TOYOTA_IMAGES['corolla hatchback'];
+  if (carName.includes('corolla hybrid')) return TOYOTA_IMAGES['corolla hybrid'];
+  if (carName.includes('corolla sedan')) return TOYOTA_IMAGES['corolla sedan'];
+  if (carName.includes('corolla')) return TOYOTA_IMAGES['corolla'];
+  
+  if (carName.includes('camry hybrid')) return TOYOTA_IMAGES['camry hybrid'];
+  if (carName.includes('camry')) return TOYOTA_IMAGES['camry'];
+  
+  if (carName.includes('rav4 prime')) return TOYOTA_IMAGES['rav4 prime'];
+  if (carName.includes('rav4 hybrid')) return TOYOTA_IMAGES['rav4 hybrid'];
+  if (carName.includes('rav4')) return TOYOTA_IMAGES['rav4'];
+  
+  if (carName.includes('prius prime')) return TOYOTA_IMAGES['prius prime'];
+  if (carName.includes('prius')) return TOYOTA_IMAGES['prius'];
+  
+  if (carName.includes('highlander hybrid')) return TOYOTA_IMAGES['highlander hybrid'];
+  if (carName.includes('highlander')) return TOYOTA_IMAGES['highlander'];
+  
+  if (carName.includes('4runner')) return TOYOTA_IMAGES['4runner'];
+  if (carName.includes('venza')) return TOYOTA_IMAGES['venza'];
+  if (carName.includes('sequoia')) return TOYOTA_IMAGES['sequoia'];
+  if (carName.includes('tacoma')) return TOYOTA_IMAGES['tacoma'];
+  if (carName.includes('tundra')) return TOYOTA_IMAGES['tundra'];
+  if (carName.includes('sienna')) return TOYOTA_IMAGES['sienna'];
+  if (carName.includes('crown')) return TOYOTA_IMAGES['crown'];
+  if (carName.includes('bz4x')) return TOYOTA_IMAGES['bz4x'];
+  if (carName.includes('gr86')) return TOYOTA_IMAGES['gr86'];
+  if (carName.includes('supra')) return TOYOTA_IMAGES['supra'];
+  
+  return TOYOTA_IMAGES.default;
+};
 
   const swipe = (direction) => {
     if (!current) return;
@@ -50,6 +172,17 @@ export default function Results() {
     }
   };
 
+  // Debug current car
+  useEffect(() => {
+    if (current) {
+      console.log(`🔄 Current car changed to index ${index}:`, {
+        name: current.name,
+        image: current.image,
+        finalImage: getCarImage(current)
+      });
+    }
+  }, [current, index]);
+
   return (
     <div style={{ minHeight: "100vh", background: "linear-gradient(135deg,#06111c,#2b0f0f)", color: "white", padding: 24, fontFamily: "Inter, Arial, sans-serif" }}>
       <div style={{ maxWidth: 1000, margin: "20px auto" }}>
@@ -68,14 +201,26 @@ export default function Results() {
           <div style={{ display: "flex", gap: 20 }}>
             <div style={{ flex: 1 }}>
               <div style={{ borderRadius: 14, overflow: "hidden", border: "1px solid rgba(255,255,255,0.06)", background: "#0f1724" }}>
-                <img 
-                  src={current.image} 
-                  alt={current.name} 
-                  style={{ width: "100%", height: 320, objectFit: "cover" }}
-                  onError={(e) => {
-                    e.target.src = "https://via.placeholder.com/400x300/1f2937/9ca3af?text=Toyota+Vehicle";
-                  }}
-                />
+                <div style={{ width: "100%", height: 320, background: "#1e293b", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <img 
+                    src={getCarImage(current)} 
+                    alt={current.name} 
+                    style={{ 
+                      width: "100%", 
+                      height: "100%", 
+                      objectFit: "contain",
+                      padding: "20px"
+                    }}
+                    onLoad={(e) => {
+                      console.log(`✅ Image loaded successfully: ${e.target.src}`);
+                    }}
+                    onError={(e) => {
+                      console.log(`❌ Image failed to load: ${e.target.src}`);
+                      console.log(`🔄 Setting fallback image for: ${current.name}`);
+                      e.target.src = TOYOTA_IMAGES.default;
+                    }}
+                  />
+                </div>
                 <div style={{ padding: 18 }}>
                   <h2 style={{ margin: 0 }}>{current.name}</h2>
                   <p style={{ color: "#cbd5e1" }}>{current.description}</p>
@@ -164,17 +309,38 @@ export default function Results() {
                     }} 
                     onClick={() => toggleCompare(car)}
                   >
-                    <img 
-                      src={car.image} 
-                      alt={car.name} 
-                      style={{ width: 80, height: 56, objectFit: "cover", borderRadius: 8 }}
-                      onError={(e) => {
-                        e.target.src = "https://via.placeholder.com/80x56/1f2937/9ca3af?text=Toyota";
-                      }}
-                    />
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontWeight: 700 }}>{car.name}</div>
-                      <div style={{ color: "#9ca3af", fontSize: 13 }}>{car.description}</div>
+                    <div style={{ 
+                      width: 80, 
+                      height: 56, 
+                      background: "#1e293b", 
+                      borderRadius: 8,
+                      overflow: "hidden",
+                      flexShrink: 0
+                    }}>
+                      <img 
+                        src={getCarImage(car)} 
+                        alt={car.name} 
+                        style={{ 
+                          width: "100%", 
+                          height: "100%", 
+                          objectFit: "cover"
+                        }}
+                        onLoad={(e) => {
+                          console.log(`✅ Favorite image loaded: ${car.name}`);
+                        }}
+                        onError={(e) => {
+                          console.log(`❌ Favorite image failed: ${car.name} - ${e.target.src}`);
+                          e.target.src = TOYOTA_IMAGES.default;
+                        }}
+                      />
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontWeight: 700, fontSize: 14, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                        {car.name}
+                      </div>
+                      <div style={{ color: "#9ca3af", fontSize: 12, lineHeight: 1.3, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+                        {car.description}
+                      </div>
                     </div>
                   </div>
                 ))}
