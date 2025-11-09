@@ -234,7 +234,7 @@ export default function Compare() {
 
     setLoading(true);
     try {
-      const res = await fetch("http://localhost:4000/api/compare", {
+      const res = await fetch("https://meaningful-danika-isaaqprox-294e4877.koyeb.app/api/compare", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ cars: carsToCompare }),
@@ -248,7 +248,7 @@ export default function Compare() {
       setComparison(data.comparison || "No comparison generated");
     } catch (error) {
       console.error("Comparison error:", error);
-      setComparison("Failed to generate comparison. Make sure the AI server is running on localhost:4000");
+      setComparison("Failed to generate comparison. Make sure the AI server is running on https://meaningful-danika-isaaqprox-294e4877.koyeb.app/");
     } finally {
       setLoading(false);
     }
