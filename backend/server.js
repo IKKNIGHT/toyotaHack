@@ -13,15 +13,106 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-// Fallback data for when API fails
-const FALLBACK_QUESTIONS = [
-  { id: "location", question: "Where do you call home?", options: ["Urban Core","Suburban Life","Rural Freedom"] },
-  { id: "commute", question: "What's your daily journey like?", options: ["Under 10 miles","10-30 miles","30-50 miles","50+ miles"] },
-  { id: "future_family", question: "Do you plan to have kids or grow family in next 5 years?", options: ["Already have kids","Planning within 2 years","Maybe someday","No plans"] },
-  { id: "adventure", question: "Are you a weekend road tripper / outdoor person?", options: ["Not at all","Occasional trips","Monthly adventures","Every weekend!"] },
-  { id: "relocation", question: "Are you likely to move or commute more in future?", options:["I stay put","Might relocate","Often move for work","Always moving"] },
-  { id: "lifestyle", question: "Which describes your vibe?", options:["Practical","Tech-forward","Performance-centric","Family-first"] },
-  { id: "priorities", question: "Top priority for your new car?", options:["Fuel efficiency","Space & comfort","Tech & safety","Performance & style"] }
+// Your curated questions - these will always be used
+const TOYOTA_QUESTIONS = [
+  {
+    id: "vibe",
+    question: "If your car were a partner, what kind of energy would you vibe with?",
+    options: [
+      "Loyal & dependable — gets me through anything",
+      "Stylish & fun — keeps life exciting",
+      "Smart & efficient — makes every mile count",
+      "Adventurous — ready for any detour"
+    ]
+  },
+  {
+    id: "commute",
+    question: "How far are you willing to 'drive for a date' (aka your daily commute)?",
+    options: [
+      "We live in the same neighborhood (under 10 miles)",
+      "Short drive — worth it (10–30 miles)",
+      "It's complicated (30–50 miles)",
+      "Long-distance relationship (50+ miles)"
+    ]
+  },
+  {
+    id: "budget",
+    question: "What kind of relationship are you ready to commit to… financially?",
+    options: [
+      "Keeping it chill (under $25k)",
+      "Serious but stable ($25k–$35k)",
+      "Ready to invest in something nice ($35k–$45k)",
+      "All-in for luxury & performance ($45k+)"
+    ]
+  },
+  {
+    id: "lifestyle",
+    question: "Your weekends usually look like…",
+    options: [
+      "Cafes, city strolls, and errands",
+      "Beach trips, hikes, and mini adventures",
+      "Home projects or family hangouts",
+      "Late-night drives and road playlists"
+    ]
+  },
+  {
+    id: "tech_savvy",
+    question: "How important is it that your car 'gets you' (tech + AI + features)?",
+    options: [
+      "Don't care — just start and go",
+      "Nice to have — a few smart features are cool",
+      "Essential — I want my car to think with me",
+      "Must-have — I need cutting-edge everything"
+    ]
+  },
+  {
+    id: "future_family",
+    question: "Do you see more passengers in your future (family, friends, pets)?",
+    options: [
+      "Just me, myself, and I",
+      "A partner or roommate situation",
+      "Full carpool vibes soon",
+      "Already chauffeuring the crew"
+    ]
+  },
+  {
+    id: "personality",
+    question: "Pick the word that feels most like your driving personality:",
+    options: [
+      "Chill — slow lanes and podcasts",
+      "Efficient — minimal fuel, max focus",
+      "Bold — love to lead the pack",
+      "Curious — new routes every weekend"
+    ]
+  },
+  {
+    id: "green",
+    question: "Would you date a car that's electric or hybrid?",
+    options: [
+      "Totally — love a green partner",
+      "Maybe — depends on convenience",
+      "Not yet — gas is still my comfort zone"
+    ]
+  },
+  {
+    id: "parking",
+    question: "How do you feel about parking situations?",
+    options: [
+      "Tight city spots? No problem.",
+      "Prefer open suburban lots",
+      "Avoid downtown like it's an ex"
+    ]
+  },
+  {
+    id: "dealbreaker",
+    question: "What's your biggest dealbreaker in a car?",
+    options: [
+      "Bad mileage — I like long drives",
+      "Tiny trunk — I pack for everything",
+      "Outdated tech — can't live without CarPlay",
+      "Boring look — I need style"
+    ]
+  }
 ];
 
 const FALLBACK_CARS = [
@@ -72,73 +163,14 @@ const FALLBACK_CARS = [
   }
 ];
 
-// ============= 1️⃣ Generate Toyota Lifestyle Questions ==================
+// ============= 1️⃣ Get Toyota Lifestyle Questions ==================
 app.get("/api/questions", async (req, res) => {
   try {
-    const prompt = `
-You are Toyota's smart assistant. Generate exactly 7 lifestyle questions to help customers choose their ideal Toyota vehicle.
-Use these EXACT question IDs and formats:
-
-[
-  {"id":"location","question":"Where do you call home?","options":["Urban Core","Suburban Life","Rural Freedom"]},
-  {"id":"commute","question":"What's your daily journey like?","options":["Under 10 miles","10-30 miles","30-50 miles","50+ miles"]},
-  {"id":"future_family","question":"Do you plan to have kids or grow family in next 5 years?","options":["Already have kids","Planning within 2 years","Maybe someday","No plans"]},
-  {"id":"adventure","question":"Are you a weekend road tripper / outdoor person?","options":["Not at all","Occasional trips","Monthly adventures","Every weekend!"]},
-  {"id":"relocation","question":"Are you likely to move or commute more in future?","options":["I stay put","Might relocate","Often move for work","Always moving"]},
-  {"id":"lifestyle","question":"Which describes your vibe?","options":["Practical","Tech-forward","Performance-centric","Family-first"]},
-  {"id":"priorities","question":"Top priority for your new car?","options":["Fuel efficiency","Space & comfort","Tech & safety","Performance & style"]}
-]
-
-Respond ONLY with this exact JSON array, no other text.
-`;
-
-    const completion = await openai.chat.completions.create({
-      model: "anthropic/claude-3-haiku", //ai model
-      messages: [{ role: "system", content: prompt }],
-      temperature: 0.7,
-    });
-
-    let jsonText = completion.choices[0]?.message?.content?.trim() || "";
-    
-    if (!jsonText) {
-      console.warn("⚠️ Empty AI response for questions, using fallback");
-      return res.json(FALLBACK_QUESTIONS);
-    }
-
-    // Clean up any markdown fences or junk
-    jsonText = jsonText.replace(/```json|```/g, "").trim();
-
-    const startIdx = jsonText.indexOf("[");
-    const endIdx = jsonText.lastIndexOf("]");
-    if (startIdx === -1 || endIdx === -1) {
-      console.warn("⚠️ No JSON array detected in AI output for questions, using fallback");
-      return res.json(FALLBACK_QUESTIONS);
-    }
-
-    jsonText = jsonText.substring(startIdx, endIdx + 1);
-    let questions;
-
-    try {
-      questions = JSON.parse(jsonText);
-    } catch (e) {
-      console.warn("⚠️ JSON parse failed for questions, attempting repair...");
-      try {
-        const repaired = jsonText
-          .replace(/,(\s*[}\]])/g, "$1")
-          .replace(/[\r\n]+/g, " ")
-          .replace(/\s+/g, " ");
-        questions = JSON.parse(repaired);
-      } catch (parseError) {
-        console.warn("⚠️ JSON repair failed, using fallback questions");
-        questions = FALLBACK_QUESTIONS;
-      }
-    }
-
-    console.log(`✅ Loaded ${questions.length} Toyota lifestyle questions`);
-    res.json(questions);
+    console.log(`✅ Returning ${TOYOTA_QUESTIONS.length} curated Toyota lifestyle questions`);
+    res.json(TOYOTA_QUESTIONS);
   } catch (err) {
-    console.error("❌ Error generating questions:", err.message);
-    res.json(FALLBACK_QUESTIONS);
+    console.error("❌ Error returning questions:", err.message);
+    res.json(TOYOTA_QUESTIONS); // Still return the questions even on error
   }
 });
 
@@ -181,7 +213,7 @@ IMPORTANT: Return ONLY the JSON array, no other text.
 `;
 
     const completion = await openai.chat.completions.create({
-      model: "anthropic/claude-3-haiku", // BEST CHOICE - Fast & reliable
+      model: "anthropic/claude-3-haiku",
       messages: [{ role: "system", content: prompt }],
       max_tokens: 1500,
       temperature: 0.7,
@@ -190,14 +222,14 @@ IMPORTANT: Return ONLY the JSON array, no other text.
     let jsonText = completion.choices[0].message.content.trim();
     console.log("🤖 Raw AI output:", jsonText);
 
-    // 🧹 Clean the response
+    // Clean the response
     jsonText = jsonText
       .replace(/```json|```/g, "")
       .replace(/\$|USD|Price TBD|TBD|approx\.?|N\/A/gi, "")
       .replace(/:\s*This configuration.*?(,|\})/gi, ': ""$1')
       .trim();
 
-    // 🧼 Extract only JSON array part
+    // Extract only JSON array part
     const startIdx = jsonText.indexOf("[");
     const endIdx = jsonText.lastIndexOf("]");
     if (startIdx === -1 || endIdx === -1) {
@@ -215,10 +247,10 @@ IMPORTANT: Return ONLY the JSON array, no other text.
       console.warn("⚠️ JSON parse failed, attempting auto-repair...");
       try {
         const repaired = jsonText
-          .replace(/,(\s*[}\]])/g, "$1") // trailing commas
-          .replace(/(\d+)\s*mpg/gi, '"mpg":$1') // fix mpgs if texty
+          .replace(/,(\s*[}\]])/g, "$1")
+          .replace(/(\d+)\s*mpg/gi, '"mpg":$1')
           .replace(/\s+/g, " ")
-          .replace(/"msrp":\s*"(\d+)"/g, '"msrp": $1') // fix quoted numbers
+          .replace(/"msrp":\s*"(\d+)"/g, '"msrp": $1')
           .replace(/"mpg":\s*"(\d+)"/g, '"mpg": $1')
           .replace(/"leaseMonthly":\s*"(\d+)"/g, '"leaseMonthly": $1');
         results = JSON.parse(repaired);
@@ -239,15 +271,15 @@ IMPORTANT: Return ONLY the JSON array, no other text.
       leaseMonthly: car.leaseMonthly
     }));
 
-    console.log(` Parsed ${results.length} Toyota recommendations`);
+    console.log(`✅ Parsed ${results.length} Toyota recommendations`);
     res.json({ results });
   } catch (err) {
-    console.error(" Match generation failed:", err.message);
+    console.error("❌ Match generation failed:", err.message);
     res.json({ results: FALLBACK_CARS });
   }
 });
 
-// ============= 4️⃣ AI Car Comparison Endpoint ==================
+// ============= 3️⃣ AI Car Comparison Endpoint ==================
 app.post("/api/compare", async (req, res) => {
   const { cars } = req.body;
   
@@ -452,8 +484,7 @@ function getBestFor(carName) {
   return 'Daily Driving & Versatility';
 }
 
-
-// ============= 3️⃣ Health Check Endpoint ==================
+// ============= 4️⃣ Health Check Endpoint ==================
 app.get("/api/health", (req, res) => {
   res.json({ 
     status: "OK", 

@@ -563,26 +563,26 @@ export default function Compare() {
               <div style={{ display: "grid", gap: 12 }}>
                 {/* Financial Analysis Dropdown */}
                 <DropdownSection 
-                  title="💰 Financial Analysis" 
+                  title="Financial Analysis" 
                   content={extractSection(comparison, "FINANCIAL ANALYSIS")}
                   defaultOpen={true}
                 />
                 
                 {/* Insurance & Maintenance Dropdown */}
                 <DropdownSection 
-                  title="🛡️ Insurance & Maintenance" 
+                  title="Insurance & Maintenance" 
                   content={extractSection(comparison, "INSURANCE & MAINTENANCE")}
                 />
                 
                 {/* Lifestyle Fit Dropdown */}
                 <DropdownSection 
-                  title="🎯 Lifestyle Fit" 
+                  title="Lifestyle Fit" 
                   content={extractSection(comparison, "LIFESTYLE FIT")}
                 />
                 
                 {/* Recommendation Dropdown */}
                 <DropdownSection 
-                  title="📊 Recommendation" 
+                  title="Recommendation" 
                   content={extractSection(comparison, "RECOMMENDATION")}
                 />
               </div>
