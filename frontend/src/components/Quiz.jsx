@@ -11,7 +11,7 @@ export default function Quiz() {
 
   useEffect(() => {
     // Fetch quiz questions from backend
-    fetch("http://localhost:4000/api/questions")
+    fetch("https://meaningful-danika-isaaqprox-294e4877.koyeb.app/api/questions")
       .then(r => {
         if (!r.ok) throw new Error("Failed to fetch questions");
         return r.json();
@@ -42,7 +42,7 @@ export default function Quiz() {
     } else {
       // Submit to backend to get matched cars
       setLoading(true);
-      fetch("http://localhost:4000/api/match", {
+      fetch("https://meaningful-danika-isaaqprox-294e4877.koyeb.app/api/match", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ answers: newAnswers })
