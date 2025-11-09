@@ -86,27 +86,27 @@ export default function Quiz() {
     }
   };
 
-  if (!questions.length) return <div style={{ padding: 40, color: "white" }}>Loading quiz...</div>;
+  if (!questions.length) return <div style={{ padding: 40, color: "#1f2937" }}>Loading quiz...</div>;
 
   return (
-    <div style={{ minHeight: "100vh", fontFamily: "Inter, Arial, sans-serif", background: "linear-gradient(135deg,#071421,#2b0d0d)", color: "white", padding: 24 }}>
+    <div style={{ minHeight: "100vh", fontFamily: "Inter, Arial, sans-serif", background: "white", color: "#1f2937", padding: 24 }}>
       <div style={{ maxWidth: 760, margin: "40px auto" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", color: "#cbd5e1", fontSize: 14 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", color: "#6b7280", fontSize: 14 }}>
           <div>Question {index + 1} / {questions.length}</div>
           <div>{Math.round(((index + 1) / questions.length) * 100)}%</div>
         </div>
 
-        <div style={{ marginTop: 16, height: 10, background: "#1f2937", borderRadius: 8 }}>
+        <div style={{ marginTop: 16, height: 10, background: "#e5e7eb", borderRadius: 8 }}>
           <div style={{
             width: `${((index + 1) / questions.length) * 100}%`,
             height: "100%",
             borderRadius: 8,
-            background: "linear-gradient(90deg,#ef4444,#b91c1c)"
+            background: "linear-gradient(90deg,#dc2626,#b91c1c)"
           }} />
         </div>
 
-        <div style={{ marginTop: 24, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", padding: 26, borderRadius: 18 }}>
-          <h2 style={{ fontSize: 26, marginBottom: 14 }}>{questions[index].question}</h2>
+        <div style={{ marginTop: 24, background: "#f8fafc", border: "1px solid #e5e7eb", padding: 26, borderRadius: 18 }}>
+          <h2 style={{ fontSize: 26, marginBottom: 14, color: "#1f2937" }}>{questions[index].question}</h2>
           <div style={{ display: "grid", gap: 12 }}>
             {questions[index].options.map((opt, i) => (
               <button
@@ -116,14 +116,21 @@ export default function Quiz() {
                   textAlign: "left",
                   padding: "14px 16px",
                   borderRadius: 12,
-                  border: "1px solid rgba(255,255,255,0.06)",
-                  background: "rgba(255,255,255,0.02)",
-                  color: "white",
+                  border: "1px solid #d1d5db",
+                  background: "white",
+                  color: "#1f2937",
                   cursor: "pointer",
-                  fontSize: 16
+                  fontSize: 16,
+                  transition: "all 0.2s ease"
                 }}
-                onMouseOver={(e)=> e.currentTarget.style.background = "rgba(220,38,38,0.12)"}
-                onMouseOut={(e)=> e.currentTarget.style.background = "rgba(255,255,255,0.02)"}
+                onMouseOver={(e)=> {
+                  e.currentTarget.style.background = "#fef2f2";
+                  e.currentTarget.style.borderColor = "#dc2626";
+                }}
+                onMouseOut={(e)=> {
+                  e.currentTarget.style.background = "white";
+                  e.currentTarget.style.borderColor = "#d1d5db";
+                }}
               >
                 {opt}
               </button>
@@ -131,7 +138,7 @@ export default function Quiz() {
           </div>
         </div>
 
-        {loading && <div style={{ marginTop: 18, color: "#cbd5e1" }}>Matching cars for you...</div>}
+        {loading && <div style={{ marginTop: 18, color: "#6b7280" }}>Matching cars for you...</div>}
       </div>
     </div>
   );

@@ -220,7 +220,7 @@ IMPORTANT: Return ONLY the JSON array, no other text.
     });
 
     let jsonText = completion.choices[0].message.content.trim();
-    console.log("🤖 Raw AI output:", jsonText);
+    console.log("Raw AI output:", jsonText);
 
     // Clean the response
     jsonText = jsonText
@@ -233,7 +233,7 @@ IMPORTANT: Return ONLY the JSON array, no other text.
     const startIdx = jsonText.indexOf("[");
     const endIdx = jsonText.lastIndexOf("]");
     if (startIdx === -1 || endIdx === -1) {
-      console.warn("⚠️ No JSON array detected in AI output, using fallback cars");
+      console.warn("No JSON array detected in AI output, using fallback cars");
       return res.json({ results: FALLBACK_CARS });
     }
     
@@ -244,7 +244,7 @@ IMPORTANT: Return ONLY the JSON array, no other text.
     try {
       results = JSON.parse(jsonText);
     } catch (e) {
-      console.warn("⚠️ JSON parse failed, attempting auto-repair...");
+      console.warn("JSON parse failed, attempting auto-repair...");
       try {
         const repaired = jsonText
           .replace(/,(\s*[}\]])/g, "$1")
@@ -255,7 +255,7 @@ IMPORTANT: Return ONLY the JSON array, no other text.
           .replace(/"leaseMonthly":\s*"(\d+)"/g, '"leaseMonthly": $1');
         results = JSON.parse(repaired);
       } catch (repairError) {
-        console.warn("⚠️ JSON repair failed, using fallback cars");
+        console.warn("JSON repair failed, using fallback cars");
         results = FALLBACK_CARS;
       }
     }
@@ -352,7 +352,7 @@ Format your response in clear, conversational paragraphs with clear section head
 
     const comparison = completion.choices[0].message.content.trim();
     
-    console.log("✅ AI comparison generated successfully");
+    console.log("AI comparison generated successfully");
     res.json({ 
       comparison,
       costBreakdown: {
@@ -372,7 +372,7 @@ Format your response in clear, conversational paragraphs with clear section head
     });
     
   } catch (err) {
-    console.error("❌ AI comparison failed:", err.message);
+    console.error("AI comparison failed:", err.message);
     
     // Enhanced fallback comparison with cost analysis
     const car1 = calculateAdditionalCosts(cars[0]);
