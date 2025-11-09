@@ -207,7 +207,7 @@ IMPORTANT: Return ONLY the JSON array, no other text.
     
     jsonText = jsonText.substring(startIdx, endIdx + 1);
 
-    // 🧠 Attempt to safely parse
+    // Attempt to safely parse
     let results;
     try {
       results = JSON.parse(jsonText);
@@ -239,13 +239,219 @@ IMPORTANT: Return ONLY the JSON array, no other text.
       leaseMonthly: car.leaseMonthly
     }));
 
-    console.log(`🚗 Parsed ${results.length} Toyota recommendations`);
+    console.log(` Parsed ${results.length} Toyota recommendations`);
     res.json({ results });
   } catch (err) {
-    console.error("❌ Match generation failed:", err.message);
+    console.error(" Match generation failed:", err.message);
     res.json({ results: FALLBACK_CARS });
   }
 });
+
+// ============= 4️⃣ AI Car Comparison Endpoint ==================
+app.post("/api/compare", async (req, res) => {
+  const { cars } = req.body;
+  
+  if (!cars || !Array.isArray(cars) || cars.length < 2) {
+    return res.status(400).json({ error: "Please provide at least 2 cars to compare" });
+  }
+
+  console.log("🔍 Comparing cars:", cars.map(c => c.name));
+
+  try {
+    // Calculate additional cost metrics
+    const car1 = calculateAdditionalCosts(cars[0]);
+    const car2 = calculateAdditionalCosts(cars[1]);
+
+    const prompt = `
+You are a Toyota financial and lifestyle expert. Compare these two Toyota vehicles in detail:
+
+CAR 1: ${car1.name}
+- MSRP: $${car1.msrp}
+- MPG: ${car1.mpg}
+- Lease: $${car1.leaseMonthly}/month
+- Estimated Annual Insurance: $${car1.annualInsurance}
+- Estimated Annual Maintenance: $${car1.annualMaintenance}
+- 5-Year Total Cost: $${car1.fiveYearCost}
+- Description: ${car1.description}
+
+CAR 2: ${car2.name}  
+- MSRP: $${car2.msrp}
+- MPG: ${car2.mpg}
+- Lease: $${car2.leaseMonthly}/month
+- Estimated Annual Insurance: $${car2.annualInsurance}
+- Estimated Annual Maintenance: $${car2.annualMaintenance}
+- 5-Year Total Cost: $${car2.fiveYearCost}
+- Description: ${car2.description}
+
+Provide a comprehensive comparison covering:
+
+💰 **FINANCIAL ANALYSIS:**
+- Upfront cost comparison (MSRP)
+- Long-term value (5-year total cost)
+- Insurance and maintenance costs
+- Fuel savings based on MPG difference
+- Best value for money
+
+🛡️ **INSURANCE & MAINTENANCE:**
+- Why insurance costs differ between these models
+- Expected maintenance requirements
+- Reliability factors
+
+🎯 **LIFESTYLE FIT:**
+- Best use cases for each vehicle
+- Family considerations
+- Commuting vs adventure suitability
+- Resale value prospects
+
+📊 **RECOMMENDATION:**
+- Clear guidance on who should choose which vehicle
+- Financial trade-offs
+- Lifestyle compatibility
+
+Format your response in clear, conversational paragraphs with clear section headings. Be specific and data-driven in your analysis.
+`;
+
+    const completion = await openai.chat.completions.create({
+      model: "anthropic/claude-3-haiku",
+      messages: [{ role: "system", content: prompt }],
+      max_tokens: 2000,
+      temperature: 0.7,
+    });
+
+    const comparison = completion.choices[0].message.content.trim();
+    
+    console.log("✅ AI comparison generated successfully");
+    res.json({ 
+      comparison,
+      costBreakdown: {
+        car1: {
+          name: car1.name,
+          annualInsurance: car1.annualInsurance,
+          annualMaintenance: car1.annualMaintenance,
+          fiveYearCost: car1.fiveYearCost
+        },
+        car2: {
+          name: car2.name,
+          annualInsurance: car2.annualInsurance,
+          annualMaintenance: car2.annualMaintenance,
+          fiveYearCost: car2.fiveYearCost
+        }
+      }
+    });
+    
+  } catch (err) {
+    console.error("❌ AI comparison failed:", err.message);
+    
+    // Enhanced fallback comparison with cost analysis
+    const car1 = calculateAdditionalCosts(cars[0]);
+    const car2 = calculateAdditionalCosts(cars[1]);
+    
+    const fallbackComparison = `**Comprehensive Comparison: ${car1.name} vs ${car2.name}**
+
+💰 **FINANCIAL BREAKDOWN:**
+
+**${car1.name}:**
+- MSRP: $${car1.msrp?.toLocaleString()}
+- Annual Insurance: ~$${car1.annualInsurance}
+- Annual Maintenance: ~$${car1.annualMaintenance}
+- 5-Year Total Cost: ~$${car1.fiveYearCost?.toLocaleString()}
+
+**${car2.name}:**
+- MSRP: $${car2.msrp?.toLocaleString()}
+- Annual Insurance: ~$${car2.annualInsurance}
+- Annual Maintenance: ~$${car2.annualMaintenance}
+- 5-Year Total Cost: ~$${car2.fiveYearCost?.toLocaleString()}
+
+🛡️ **INSURANCE & MAINTENANCE:**
+${car1.annualInsurance < car2.annualInsurance ? 
+  `• **Lower Insurance**: ${car1.name} saves ~$${car2.annualInsurance - car1.annualInsurance}/year on insurance` :
+  `• **Lower Insurance**: ${car2.name} saves ~$${car1.annualInsurance - car2.annualInsurance}/year on insurance`}
+
+${car1.annualMaintenance < car2.annualMaintenance ?
+  `• **Lower Maintenance**: ${car1.name} saves ~$${car2.annualMaintenance - car1.annualMaintenance}/year on maintenance` :
+  `• **Lower Maintenance**: ${car2.name} saves ~$${car1.annualMaintenance - car2.annualMaintenance}/year on maintenance`}
+
+🎯 **LIFESTYLE RECOMMENDATION:**
+Choose **${car1.name}** if you prioritize ${getBestFor(car1.name).toLowerCase()}, or **${car2.name}** for ${getBestFor(car2.name).toLowerCase()}.
+
+${car1.fiveYearCost < car2.fiveYearCost ?
+  `💡 **Best Value**: ${car1.name} offers better long-term value, saving ~$${car2.fiveYearCost - car1.fiveYearCost} over 5 years` :
+  `💡 **Best Value**: ${car2.name} offers better long-term value, saving ~$${car1.fiveYearCost - car2.fiveYearCost} over 5 years`}`;
+
+    res.json({ 
+      comparison: fallbackComparison,
+      costBreakdown: {
+        car1: {
+          name: car1.name,
+          annualInsurance: car1.annualInsurance,
+          annualMaintenance: car1.annualMaintenance,
+          fiveYearCost: car1.fiveYearCost
+        },
+        car2: {
+          name: car2.name,
+          annualInsurance: car2.annualInsurance,
+          annualMaintenance: car2.annualMaintenance,
+          fiveYearCost: car2.fiveYearCost
+        }
+      }
+    });
+  }
+});
+
+// Helper function to calculate additional costs
+function calculateAdditionalCosts(car) {
+  const name = car.name.toLowerCase();
+  
+  // Insurance calculation based on vehicle type and MSRP
+  let insuranceMultiplier;
+  if (name.includes('corolla') || name.includes('prius') || name.includes('camry')) {
+    insuranceMultiplier = 0.08; // Lower insurance for sedans
+  } else if (name.includes('rav4') || name.includes('venza')) {
+    insuranceMultiplier = 0.10; // Medium for compact SUVs
+  } else if (name.includes('highlander') || name.includes('4runner')) {
+    insuranceMultiplier = 0.12; // Higher for larger SUVs
+  } else if (name.includes('tacoma') || name.includes('tundra')) {
+    insuranceMultiplier = 0.13; // Highest for trucks
+  } else {
+    insuranceMultiplier = 0.09; // Default
+  }
+  
+  // Maintenance calculation
+  let maintenanceMultiplier;
+  if (name.includes('hybrid')) {
+    maintenanceMultiplier = 0.015; // Lower maintenance for hybrids
+  } else {
+    maintenanceMultiplier = 0.020; // Standard maintenance
+  }
+  
+  const annualInsurance = Math.round(car.msrp * insuranceMultiplier);
+  const annualMaintenance = Math.round(car.msrp * maintenanceMultiplier);
+  
+  // 5-year total cost: MSRP + (insurance + maintenance + fuel) * 5 years
+  // Assuming 12,000 miles/year and $3.50/gallon for fuel
+  const annualFuelCost = Math.round((12000 / car.mpg) * 3.5);
+  const fiveYearCost = car.msrp + ((annualInsurance + annualMaintenance + annualFuelCost) * 5);
+  
+  return {
+    ...car,
+    annualInsurance,
+    annualMaintenance,
+    annualFuelCost,
+    fiveYearCost: Math.round(fiveYearCost)
+  };
+}
+
+// Helper function for lifestyle recommendations
+function getBestFor(carName) {
+  const name = carName.toLowerCase();
+  if (name.includes('corolla') || name.includes('prius')) return 'City Driving & Fuel Efficiency';
+  if (name.includes('camry') || name.includes('crown')) return 'Commuting & Comfort';
+  if (name.includes('rav4') || name.includes('venza')) return 'Family & Adventure';
+  if (name.includes('highlander') || name.includes('sienna')) return 'Large Families & Road Trips';
+  if (name.includes('4runner') || name.includes('tacoma')) return 'Off-road & Utility';
+  return 'Daily Driving & Versatility';
+}
+
 
 // ============= 3️⃣ Health Check Endpoint ==================
 app.get("/api/health", (req, res) => {

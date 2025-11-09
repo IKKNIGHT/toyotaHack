@@ -14,6 +14,7 @@ export default function App() {
         <Route path="/quiz" element={<Quiz />} />
         <Route path="/results" element={<Results />} />
         <Route path="/compare" element={<Compare />} />
+        
       </Routes>
     </QuizProvider>
   );
